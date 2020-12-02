@@ -20,12 +20,12 @@ knitr::opts_chunk$set(message=FALSE,warning=FALSE, cache=TRUE)
 
 Last compiled: `r Sys.Date()`
 
-# FIRST ASIGMMENT
+# FIRST ASSIGNMENT
 
-In this first challenge we had to analyze the sales of bikes in the different states of Germany:Analyze the sales by location (state) with a bar plot and the sales by location and year
+In this first assignment we had to analyze the sales of bikes in the different states of Germany. There are two challenges: analyze the sales by location (state) with a bar plot and the sales by location and year.
 
 ## Data manipulation and cleaning
-
+This part is common for both challenges
 ```{r}
 library(tidyverse)
 library(readr)
@@ -51,7 +51,7 @@ bike_orderlines_wrangled_tbl<- bike_orderlines_joined_tbl %>%
   set_names(names(.) %>% str_replace_all("\\.", "_"))
 ```
 
-## Sales by states 
+## first challenge: Sales by states 
 ```{r}
 #Step 1: Preparing the represented dat<
 sales_by_state<- bike_orderlines_wrangled_tbl %>%
@@ -86,7 +86,7 @@ sales_by_state%>%
   )
 ```
 
-## Sales by State and Year 
+## Second challenge: Sales by State and Year 
 ```{r}
 sales_state_year <- bike_orderlines_wrangled_tbl %>%
   
@@ -125,3 +125,128 @@ sales_state_year%>%
     fill = "States" )# Changes the legend name
 
 ```
+# SECOND ASSIGMMENT
+
+This assignment are related with the Data Acquisition. In this assignment there are two challenges: Get some data via an API and scrape one of the competitor websites of canyon and create a data base which contain the model names and prices for at least one category
+
+## First Challenge:APIs 
+ 
+ (...)
+ 
+## Second Challenge: SCRAPE A WEBPAGE
+
+In this second challenge we had to  crape one of the competitor websites of canyon and create a data base which contain the model names and prices for at least one category. I have chosen the competitor Rose Bikes. 
+I have decided to do it to all categories. 
+For each category, I will  get the price for a model(represented in the web-page with from €...). The process could go a little bit deeper and get the price for every variation of the model. However, due to the limitation of time, I will just take the base price for each model. I named every category as family.
+
+```{r}
+library(tidyverse) # Main Package - Loads dplyr, purrr, etc.
+library(rvest)     # HTML Hacking & Web Scraping
+library(xopen)     # Quickly opening URLs
+library(jsonlite)  # converts JSON files to R objects
+library(glue)      # concatenate strings
+library(stringi) 
+library(dplyr)
+
+
+# Second Challenge
+
+url_home <- "https://www.rosebikes.com/bikes" # get the URL
+
+html_home <- url_home %>%
+  read_html()                         # get the HTML        
+
+# Here we will get the different families 
+family_tbl <- html_home%>%
+  html_nodes(css=".main-navigation-category-with-tiles__title") %>%
+  html_text()%>%
+  discard(.p = ~stringr::str_detect(.x,"Urban|Sale|Kids|Bikes"))%>% #deleting
+  as_tibble()
+
+# Creating a vector for interaction
+
+ivector <- as_vector(1:nrow(family_tbl)) 
+
+family_name_tbl <- as_tibble()
+
+family_name_price_tbl<- as_tibble()
+bikes_data_tbl <- as_tibble()
+# In this iteration we will get the model name and the price of everyone
+for (i in ivector){
+family_name_tbl<- as_tibble() 
+name <- family_tbl[i,1]%>%
+  str_replace_all("\n", "")
+  
+# Goes to the page of the family
+url_home <- glue("https://www.rosebikes.com/bikes/{name}")
+
+
+html<- url_home %>%
+  read_html
+# Get the model names
+model_name_tbl<- html%>%
+  html_nodes(css=".catalog-category-bikes__title-text") %>%
+  html_text()%>%
+  str_replace_all(pattern="\n",replacement = "")%>%
+  as_tibble()%>%
+  rename(model_name=value)
+# get the prices
+price_tbl <- html%>%
+  html_nodes(css=".catalog-category-bikes__price-title") %>%
+  html_text()%>%
+  str_replace_all(pattern=",",replacement = "")%>%  # Delete the comma
+  str_replace_all(pattern="\n",replacement = "")%>% # delete the \n
+  as_tibble()%>%
+  separate(col=value, into =c("from","price"), sep= "€")%>% #eliminating from
+  select("price")
+  
+
+
+ivector_family<- as_vector(1:nrow(price_tbl))
+# Creates a tibble with the family name to add it to every model
+for (i in ivector_family){
+  
+  family_name_tbl[i,1]<-name
+}
+
+family_name_tbl <-family_name_tbl%>%
+  rename (family_name=...1)
+
+# Put all the  previous calculation together
+family_name_price_tbl<- bind_cols(family_name_tbl, model_name_tbl, price_tbl)
+
+#Collect all the data in a tibble
+
+bikes_data_tbl<- bind_rows(bikes_data_tbl, family_name_price_tbl)
+
+
+}                                         
+#Results
+bikes_data_tbl
+
+# The Values with NA are there because they are bikes which are not available at the moment
+#Ilustrating a few more data
+
+bikes_data_tbl [23,1]
+
+bikes_data_tbl [23,2]
+
+bikes_data_tbl [23,3]
+
+bikes_data_tbl [30,1]
+
+bikes_data_tbl [30,2]
+
+bikes_data_tbl [30,3]
+
+```
+
+
+
+
+
+
+
+
+
+
