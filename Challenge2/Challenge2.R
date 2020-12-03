@@ -6,6 +6,16 @@ library(glue)      # concatenate strings
 library(stringi) 
 library(dplyr)
 
+# First Challenge
+
+html <- GET
+
+
+
+
+
+
+
 
 # Second Challenge
 
@@ -50,10 +60,11 @@ price_tbl <- html%>%
   html_text()%>%
   str_replace_all(pattern=",",replacement = "")%>%  # Delete the comma
   str_replace_all(pattern="\n",replacement = "")%>% # delete the \n
-  as_tibble()%>%
-  separate(col=value, into =c("from","price"), sep= "€")%>% #eliminating from
-  select("price")
-  
+  str_replace_all(pattern="from €",replacement = "")%>%
+  str_replace_all(pattern=".00",replacement = "")%>%
+  readr::parse_number()%>%
+  as_tibble()
+
 
 
 ivector_family<- as_vector(1:nrow(price_tbl))
@@ -74,6 +85,7 @@ bikes_data_tbl<- bind_rows(bikes_data_tbl, family_name_price_tbl)
 }                                         
 
 print(bikes_data_tbl)
+
 
   
 
