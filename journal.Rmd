@@ -209,49 +209,44 @@ library(glue)      # concatenate strings
 library(stringi) 
 library(dplyr)
 
-
 # Second Challenge
 
-url_home <- "https://www.rosebikes.com/bikes" # get the URL
+url_home <- "https://www.rosebikes.com/bikes"
 
 html_home <- url_home %>%
-  read_html()                         # get the HTML        
+  read_html()
 
-# Here we will get the different families 
 family_tbl <- html_home%>%
   html_nodes(css=".main-navigation-category-with-tiles__title") %>%
   html_text()%>%
   discard(.p = ~stringr::str_detect(.x,"Urban|Sale|Kids|Bikes"))%>% #deleting
   as_tibble()
 
-# Creating a vector for interaction
-
-ivector <- as_vector(1:nrow(family_tbl)) 
+ivector <- as_vector(1:nrow(family_tbl)) # create a vector for the interation 
 
 family_name_tbl <- as_tibble()
 
 family_name_price_tbl<- as_tibble()
 bikes_data_tbl <- as_tibble()
-# In this iteration we will get the model name and the price of everyone
 for (i in ivector){
 family_name_tbl<- as_tibble() 
 name <- family_tbl[i,1]%>%
   str_replace_all("\n", "")
   
-# Goes to the page of the family
+
 url_home <- glue("https://www.rosebikes.com/bikes/{name}")
 
 
 html<- url_home %>%
   read_html
-# Get the model names
+
 model_name_tbl<- html%>%
   html_nodes(css=".catalog-category-bikes__title-text") %>%
   html_text()%>%
   str_replace_all(pattern="\n",replacement = "")%>%
   as_tibble()%>%
   rename(model_name=value)
-# get the prices
+
 price_tbl <- html%>%
   html_nodes(css=".catalog-category-bikes__price-title") %>%
   html_text()%>%
@@ -261,11 +256,11 @@ price_tbl <- html%>%
   str_replace_all(pattern=".00",replacement = "")%>%
   readr::parse_number()%>%
   as_tibble()
-  
+
 
 
 ivector_family<- as_vector(1:nrow(price_tbl))
-# Creates a tibble with the family name to add it to every model
+
 for (i in ivector_family){
   
   family_name_tbl[i,1]<-name
@@ -274,50 +269,44 @@ for (i in ivector_family){
 family_name_tbl <-family_name_tbl%>%
   rename (family_name=...1)
 
-# Put all the  previous calculation together
 family_name_price_tbl<- bind_cols(family_name_tbl, model_name_tbl, price_tbl)
-
-#Collect all the data in a tibble
 
 bikes_data_tbl<- bind_rows(bikes_data_tbl, family_name_price_tbl)
 
 
 }                                         
-#Results
-bikes_data_tbl
 
-# The Values with NA are there because they are bikes which are not available at the moment
-#Ilustrating a few more data
+print(bikes_data_tbl)
 
-bikes_data_tbl [23,1]
+#More values to ilustrate
 
-bikes_data_tbl [23,2]
+bikes_data_tbl[23,1]
 
-bikes_data_tbl [23,3]
+bikes_data_tbl[23,2]
 
-bikes_data_tbl [30,1]
+bikes_data_tbl[23,3]
 
-bikes_data_tbl [30,2]
+bikes_data_tbl[30,1]
 
-bikes_data_tbl [30,3]
+bikes_data_tbl[30,2]
 
+bikes_data_tbl[30,3]
 ```
 
 
-# THIRD ASSIGMMENT
+# THIRD ASSIGNMENT
 
-This assigmment covers the topic of Data Wrangling. It was related with the topic Patents, and a few data documents were given. Using dplyr or data.
+This assignment Cover the Data Wrangling topic. Using a different data from patents, we had to answer the followign questions using data.table or dplyr: 
 
 Patent Dominance: What US company / corporation has the most patents? List the 10 US companies with the most assigned/granted patents.
-
-Recent patent activity: What US company had the most patents granted in 2019? List the top 10 companies with the most new granted patents for 2019.
-
+Recent patent acitivity: What US company had the most patents granted in 2019? List the top 10 companies with the most new granted patents for 2019.
 Innovation in Tech: What is the most innovative tech sector? For the top 10 companies (worldwide) with the most patents, what are the top 5 USPTO tech main classes?
 
-## Question 1: PATENT DOMINANCE
+## QUESTION 1: PATENT DOMINANCE
 
 The process used is explanied in the following code: 
-```{r}
+
+```{r eval= F}
 library(tidyverse)
 library(vroom)
 library(data.table)
@@ -429,14 +418,16 @@ totalnumber_patent_US_dt <-totalnumber_patent_US_dt[
 
 top_10 <- totalnumber_patent_US_dt[1:10,.(organization, number_patents)] 
 
+write_rds(top_10,"top_10.rds")
+```
+```{r}
 top_10
 ```
 
 ## QUESTION 2: RECENT PATENT ACTIVITY
 
-
 The process used is explanied in the following code: 
-```{r}
+```{r eval=FALSE}
 #QUESTION 2: RECENT PATENT ACTIVITY
 
 
@@ -469,13 +460,17 @@ totalnumber_patent_US_2019_dt <-patent_US_2019_dt[
 
 top_10_US_2019 <- totalnumber_patent_US_2019_dt[1:10,.(organization, number_patents)] 
 
+write_rds(top_10_US_2019, "top_10_US_2019.rds")
+
+```
+```{r}
 top_10_US_2019
 ```
 
 ## QUESTION 3: INNOVATION IN TECH
 
 The process used is explanied in the following code: 
-```{r}
+```{r eval=FALSE}
 #QUESTION 3: INNOVATION IN TECH 
 
 #question 3.1: What is the most innovative sector?
@@ -492,11 +487,14 @@ uspc_innovative_sector <- uspc_mainclass_dt[,sum(cal), by= mainclass_id][
 
 top_innovative_sector <- uspc_innovative_sector[1,.(mainclass_id, number_patents)]
 
+write_rds(top_innovative_sector, "top_innovative_sector.rds")
+
+```
+```{r}
 top_innovative_sector
-
-#correspond with ACTIVE SOLID-STATE DEVICES
-
-
+```
+Correspond with ACTIVE SOLID-STATE DEVICES
+```{r eval=FALSE}
 #Question 3.2: 
 
 #First the top 10 WW 
@@ -524,8 +522,12 @@ totalnumber_patent_WW_dt <-assignee_patent_assignee_WW_dt[
 
 top_10_WW <- totalnumber_patent_WW_dt[1:10,.(organization, number_patents)] 
 
+write_rds(top_10_WW, "top_10_WW.rds")
+```
+```{r}
 top_10_WW
-
+```
+```{r eval=FALSE}
 # Now the USPC comes into play. We merge all data together
 
 uspc_assignee_patent_assignee_WW_dt <-merge(x = assignee_patent_assignee_WW_dt, y = uspc_dt, 
@@ -553,7 +555,9 @@ top_10_WW[!4, organization], sum(cal),by=mainclass_id][
 
 top_5_sector <- uspc_assignee_patent_assignee_top_10_WW_dt[1:5, .(mainclass_id, number_patents)]
 
-
+write_rds(top_5_sector, "top_5_sector.rds")
+```
+```{r}
 top_5_sector
 ```
 
