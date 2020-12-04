@@ -6,17 +6,6 @@ library(glue)      # concatenate strings
 library(stringi) 
 library(dplyr)
 
-# First Challenge
-
-html <- GET
-
-
-
-
-
-
-
-
 # Second Challenge
 
 url_home <- "https://www.rosebikes.com/bikes"
